@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CAR CODE BLOG</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .pressed {
+            background-color: lightgrey;
+        }
+
+        body {
+
+            background-image: url('https://mmmacademy.es/wp-content/uploads/2023/04/Ingenieria-mecanica.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .posts {
+            background-color: white;
+            width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        const App = () => {
+            return (
+                <div>
+                </div>
+            )
+        }
+        const Header = () => {
+            return (
+                <div>
+                    <button>Delete</button>
+                    <button>Delete</button>
+                    <button>Delete</button>
+                    <button>Delete</button>
+                    <button>Delete</button>
+                </div>
+            )
+        }
+
+        const { useEffect, Suspense } = React;
+        const Loading = () => {
+            return (
+                <div class='posts'>
+                    <h1>Loading...</h1>
+                </div>
+            )
+
+        }
+        const Post = () => {
+
+            async function ApiPosts() {
+                let posts = await fetch('http://localhost:22562/posts')
+                let listado_posts = await posts.json()
+                console.log(listado_posts);
+                return listado_posts;
+            }
+            async function displayPosts() {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                const posts = await ApiPosts();
+                const postsContainer = document.getElementById('posts-container');
+
+
+                if (posts.length === 0) {
+                    const emptyStateElement = document.createElement('center');
+                    emptyStateElement.textContent = 'No posts available';
+                    emptyStateElement.classList.add('posts');
+                    postsContainer.appendChild(emptyStateElement);
+                } else {
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.innerHTML = `
+                        <br/>
+                        <div class="posts">
+                            <center><h2>${post.title}</h2></center>
+                            <p><strong>ID:</strong> ${post.id}</p>
+                            <p><strong>Content:</strong> ${post.content}</p>
+                            <p><strong>Marca:</strong> ${post.marca}</p>
+                            <p><strong>Modelo:</strong> ${post.modelo}</p>
+                            <p><strong>Anio:</strong> ${post.anio}</p>
+                            <p><strong>Código de error:</strong> ${post.codigo_error}</p>
+                            <p><strong>Descripción del error:</strong> ${post.desc_error}</p>
+                            <p><strong>Created at:</strong> ${post.created_at}</p>
+                            
+                            <button class="delete-button" data-post-id="${post.id}">Delete</button>
+                        </div>
+                        <br/>
+                    `;
+                        postsContainer.appendChild(postElement);
+                    });
+                }
+
+                document.addEventListener('click', async function (event) {
+                    if (event.target.classList.contains('delete-button')) {
+                        const postId = event.target.getAttribute('data-post-id');
+                        const confirmation = confirm('Are you sure you want to delete this post?');
+                        if (confirmation) {
+                            try {
+                                const response = await fetch(`http://localhost:22562/posts/${postId}`, {
+                                    method: 'DELETE'
+                                });
+                                if (response.ok) {
+                                    console.log('Post deleted successfully');
+                                    event.target.closest('.posts').remove();
+                                } else {
+                                    console.error('Failed to delete post');
+                                }
+                            } catch (error) {
+                                console.error('Error deleting post:', error);
+                            }
+                        }
+                    }
+                });
+
+
+            }
+            displayPosts();
+            return (
+                <div id="posts-container">
+
+                </div>
+            )
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'))
+        root.render(<Suspense fallback={<Loading />}><Post /></Suspense>)
+    </script>
+</body>
+
+</html>
